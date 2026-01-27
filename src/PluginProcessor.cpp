@@ -13,6 +13,22 @@ EmptyAudioProcessor::EmptyAudioProcessor()
       ) {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
+    {
+        auto p = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"phase", 1}, "phase", 0.0f, 1.0f, 0.5f);
+        param_listener_.Add(p, [this](float v) {dsp_.phase_ = v;});
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"pitch", 1}, "pitch", 0.0f, 127.0f, 50.0f);
+        param_listener_.Add(p, [this](float v) {dsp_.pitch_ = v;});
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"morph", 1}, "morph", 0.0f, 1.0f, 0.5f);
+        param_listener_.Add(p, [this](float v) {dsp_.morph_ = v;});
+        layout.add(std::move(p));
+    }
+
     value_tree_ = std::make_unique<juce::AudioProcessorValueTreeState>(*this, nullptr, kParameterValueTreeIdentify,
                                                                        std::move(layout));
     preset_manager_ = std::make_unique<pluginshared::PresetManager>(*value_tree_, *this);
@@ -82,6 +98,7 @@ void EmptyAudioProcessor::changeProgramName(int index, const juce::String& newNa
 //==============================================================================
 void EmptyAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     float fs = static_cast<float>(sampleRate);
+    dsp_.Init(fs);
     param_listener_.MarkAll();
 }
 
@@ -120,6 +137,8 @@ void EmptyAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     size_t const num_samples = buffer.getNumSamples();
     float* left_ptr = buffer.getWritePointer(0);
     float* right_ptr = buffer.getWritePointer(1);
+
+    dsp_.Process(left_ptr, right_ptr, num_samples);
 }
 
 //==============================================================================

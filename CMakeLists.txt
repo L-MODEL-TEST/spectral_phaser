@@ -109,3 +109,8 @@ endif()
 if(APPLE)
     target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_AU=1)
 endif()
+
+# audiofft
+add_library(audiofft STATIC libs/AudioFFT/AudioFFT.cpp)
+target_include_directories(audiofft PUBLIC libs/AudioFFT)
+target_link_libraries(${PROJECT_NAME} PRIVATE audiofft)

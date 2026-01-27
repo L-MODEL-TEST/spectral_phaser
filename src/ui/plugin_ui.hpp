@@ -16,4 +16,8 @@ public:
     void paint(juce::Graphics& g) override;
 private:
     pluginshared::PresetPanel preset_;
+
+    ui::Dial pitch_{"pitch"};
+    ui::Dial phase_{"phase"};
+    ui::Dial morph_{"morph"};
 };
