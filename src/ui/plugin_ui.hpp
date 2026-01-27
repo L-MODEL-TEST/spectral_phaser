@@ -20,4 +20,5 @@ private:
     ui::Dial pitch_{"pitch"};
     ui::Dial phase_{"phase"};
     ui::Dial morph_{"morph"};
+    ui::Switch phasy_{"phasy"};
 };

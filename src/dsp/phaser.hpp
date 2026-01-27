@@ -1,10 +1,11 @@
 #pragma once
 #include <array>
+#include <complex>
+#include <random>
 
 #include "AudioFFT.h"
 #include "analyze_synthsis_online.hpp"
 #include "hann.hpp"
-
 
 namespace phaser {
 
@@ -16,6 +17,13 @@ public:
 
     SpectralPhaser() {
         qwqdsp_window::Hann::Window(hann_window_, true);
+
+        std::random_device rd{};
+        std::mt19937 rng{rd()};
+        std::uniform_real_distribution<float> dist(0.0f, std::numbers::pi_v<float>);
+        for (size_t i = 0; i < kNumBins; ++i) {
+            random_phase_[i] = std::polar(1.0f, dist(rng));
+        }
     }
 
     void Init(float fs) {
@@ -44,9 +52,18 @@ public:
         fft_.fft(output.data(), re_.data(), im_.data());
 
         for (size_t i = 0; i < kNumBins; ++i) {
-            float g = GetGain(i);
+            float g = GetGain(i, phase_, lin_space_);
             re_[i] *= g;
             im_[i] *= g;
+        }
+
+        if (metalic_) {
+            for (size_t i = 0; i < kNumBins; ++i) {
+                std::complex a{re_[i], im_[i]};
+                a *= random_phase_[i];
+                re_[i] = a.real();
+                im_[i] = a.imag();
+            }
         }
 
         fft_.ifft(output.data(), re_.data(), im_.data());
@@ -58,6 +75,7 @@ public:
     float pitch_{};
     float phase_{};
     float morph_{};
+    bool metalic_{};
 private:
     /**
      * @brief poly sin approximate from reaktor, -110dB 3rd harmonic
@@ -73,9 +91,9 @@ private:
         return u * x;
     }
 
-    float GetGain(size_t i) noexcept {
-        float flange_phase = Warp(static_cast<float>(i)) / lin_space_;
-        flange_phase += phase_;
+    float GetGain(size_t i, float phi, float cycle) noexcept {
+        float flange_phase = Warp(static_cast<float>(i)) / cycle;
+        flange_phase += phi;
         flange_phase -= std::floor(flange_phase);
         return SinReaktor(flange_phase) * 0.5f + 0.5f;
     }
@@ -96,6 +114,7 @@ private:
     std::array<float, kNumBins> re_;
     std::array<float, kNumBins> im_;
     std::array<float, kFftSize> hann_window_;
+    std::array<std::complex<float>, kNumBins> random_phase_;
 };
 
 } // namespace phaser

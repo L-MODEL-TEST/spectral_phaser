@@ -13,6 +13,8 @@ PluginUi::PluginUi(EmptyAudioProcessor& p)
     addAndMakeVisible(phase_);
     morph_.BindParam(apvt, "morph");
     addAndMakeVisible(morph_);
+    phasy_.BindParam(apvt, "phasy");
+    addAndMakeVisible(phasy_);
 }
 
 void PluginUi::resized() {
@@ -23,6 +25,7 @@ void PluginUi::resized() {
     pitch_.setBounds(line.removeFromLeft(50));
     phase_.setBounds(line.removeFromLeft(50));
     morph_.setBounds(line.removeFromLeft(50));
+    phasy_.setBounds(line.removeFromLeft(50).withSizeKeepingCentre(50, 30));
 }
 
 void PluginUi::paint(juce::Graphics& g) {

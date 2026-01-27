@@ -15,17 +15,23 @@ EmptyAudioProcessor::EmptyAudioProcessor()
 
     {
         auto p = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"phase", 1}, "phase", 0.0f, 1.0f, 0.5f);
-        param_listener_.Add(p, [this](float v) {dsp_.phase_ = v;});
+        param_listener_.Add(p, [this](float v) { dsp_.phase_ = v; });
         layout.add(std::move(p));
     }
     {
-        auto p = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"pitch", 1}, "pitch", 0.0f, 127.0f, 50.0f);
-        param_listener_.Add(p, [this](float v) {dsp_.pitch_ = v;});
+        auto p =
+            std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"pitch", 1}, "pitch", 0.0f, 150.0f, 100.0f);
+        param_listener_.Add(p, [this](float v) { dsp_.pitch_ = v; });
         layout.add(std::move(p));
     }
     {
         auto p = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"morph", 1}, "morph", 0.0f, 1.0f, 0.5f);
-        param_listener_.Add(p, [this](float v) {dsp_.morph_ = v;});
+        param_listener_.Add(p, [this](float v) { dsp_.morph_ = v; });
+        layout.add(std::move(p));
+    }
+    {
+        auto p = std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"phasy", 1}, "phasy", false);
+        param_listener_.Add(p, [this](bool v) { dsp_.metalic_ = v; });
         layout.add(std::move(p));
     }
 
