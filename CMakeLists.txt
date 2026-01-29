@@ -122,10 +122,39 @@ if(APPLE)
     target_link_libraries(audiofft PRIVATE "-framework Accelerate")
     target_compile_definitions(audiofft PRIVATE AUDIOFFT_APPLE_ACCELERATE)
 else()
-    # use intel IPP
-    find_package(IPP)
+    find_package(IPP QUIET)
+
+    if(NOT IPP_FOUND)
+        if(WIN32)
+            set(MY_IPP_ROOT "$ENV{USERPROFILE}/.nuget/packages/intelipp.static.win-x64/2022.3.0.387")
+            set(IPP_INCLUDE_DIRS "${MY_IPP_ROOT}/build/native/include")
+            set(IPP_LIBRARIES 
+                "${MY_IPP_ROOT}/build/native/win-x64/ippsmt.lib"
+                "${MY_IPP_ROOT}/build/native/win-x64/ippcoremt.lib"
+                "${MY_IPP_ROOT}/build/native/win-x64/ippvmmt.lib"
+                "${MY_IPP_ROOT}/build/native/win-x64/ippsimt.lib"
+            )
+        elseif(UNIX)
+            set(MY_IPP_ROOT "/opt/intel/oneapi/ipp/latest")
+            set(IPP_INCLUDE_DIRS "${MY_IPP_ROOT}/include")
+            set(IPP_LIBRARIES 
+                "${MY_IPP_ROOT}/lib/intel64/libipps.a"
+                "${MY_IPP_ROOT}/lib/intel64/libippcore.a"
+                "${MY_IPP_ROOT}/lib/intel64/libippvm.a"
+            )
+        endif()
+
+        if(EXISTS "${IPP_INCLUDE_DIRS}")
+            set(IPP_FOUND TRUE)
+        endif()
+    endif()
+
     if(IPP_FOUND)
+        message(STATUS "AudioFFT: Using Intel IPP")
+        target_include_directories(audiofft PRIVATE ${IPP_INCLUDE_DIRS})
         target_link_libraries(audiofft PRIVATE ${IPP_LIBRARIES})
-        target_compile_definitions(audiofft PRIVATE AUDIOFFT_INTEL_IPP)
+        target_compile_definitions(audiofft PUBLIC AUDIOFFT_INTEL_IPP)
+    else()
+        message(WARNING "AudioFFT: IPP not found, using default Ooura implementation")
     endif()
 endif()
