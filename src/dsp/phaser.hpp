@@ -35,29 +35,51 @@ public:
     }
 
     void Process(float* left, float* right, size_t num_samples) noexcept {
-        float freq = 440.0f * std::exp2((pitch_ - 69.0f) / 12.0f);
+        float freq = 440.0f * std::exp2((pitch - 69.0f) / 12.0f);
         float bins = freq / fs_ * kFftSize;
-        lin_space_ = Warp(bins);
+        space_ = Warp(bins);
 
-        segement_.Process({left, num_samples}, *this);
-
-        std::copy_n(left, num_samples, right);
+        segement_.Process({left, num_samples}, {right, num_samples}, *this);
     }
 
-    void operator()(std::span<const float> input, std::span<float> output) noexcept {
+    void operator()(std::span<float const> in_left, std::span<float const> in_right, std::span<float> out_left,
+                    std::span<float> out_right) noexcept {
         for (size_t i = 0; i < kFftSize; ++i) {
-            output[i] = input[i] * hann_window_[i];
+            out_left[i] = in_left[i] * hann_window_[i];
+        }
+        for (size_t i = 0; i < kFftSize; ++i) {
+            out_right[i] = in_right[i] * hann_window_[i];
         }
 
-        fft_.fft(output.data(), re_.data(), im_.data());
+        fft_.fft(out_left.data(), re_.data(), im_.data());
+        SpectralProcess();
+        fft_.ifft(out_left.data(), re_.data(), im_.data());
 
+        fft_.fft(out_right.data(), re_.data(), im_.data());
+        SpectralProcess();
+        fft_.ifft(out_right.data(), re_.data(), im_.data());
+
+        for (size_t i = 0; i < kFftSize; ++i) {
+            out_left[i] *= hann_window_[i];
+        }
+        for (size_t i = 0; i < kFftSize; ++i) {
+            out_right[i] *= hann_window_[i];
+        }
+    }
+
+    float pitch{};
+    float phase{};
+    float morph{};
+    bool phasy{};
+private:
+    void SpectralProcess() noexcept {
         for (size_t i = 0; i < kNumBins; ++i) {
-            float g = GetGain(i, phase_, lin_space_);
+            float g = GetGain(i, phase, space_);
             re_[i] *= g;
             im_[i] *= g;
         }
 
-        if (metalic_) {
+        if (phasy) {
             for (size_t i = 0; i < kNumBins; ++i) {
                 std::complex a{re_[i], im_[i]};
                 a *= random_phase_[i];
@@ -65,18 +87,8 @@ public:
                 im_[i] = a.imag();
             }
         }
-
-        fft_.ifft(output.data(), re_.data(), im_.data());
-        for (size_t i = 0; i < kFftSize; ++i) {
-            output[i] *= hann_window_[i];
-        }
     }
 
-    float pitch_{};
-    float phase_{};
-    float morph_{};
-    bool metalic_{};
-private:
     /**
      * @brief poly sin approximate from reaktor, -110dB 3rd harmonic
      * @note x from 0.5 is sin, 0 is cos
@@ -101,11 +113,10 @@ private:
     float Warp(float x) noexcept {
         float lin = x;
         float log = std::log(x + 1);
-        return std::lerp(lin, log, morph_);
+        return std::lerp(lin, log, morph);
     }
 
-    // float log_space_{};
-    float lin_space_{};
+    float space_{};
     float fs_{};
 
     qwqdsp_segement::AnalyzeSynthsisOnline segement_;
