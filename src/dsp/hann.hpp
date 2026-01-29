@@ -36,7 +36,7 @@ struct Hann {
         if (for_analyze_not_fir) {
             for (size_t n = 0; n < N; ++n) {
                 const float t = static_cast<float>(n) / static_cast<float>(N);
-                x[n] *= 0.5f * (1.0f - cos(2.0f * std::numbers::pi_v<float> * t));
+                x[n] *= 0.5f * (1.0f - std::cos(2.0f * std::numbers::pi_v<float> * t));
             }
         }
         else {
