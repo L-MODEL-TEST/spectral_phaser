@@ -14,19 +14,12 @@ public:
     void ProcessFft(float* re, float* im, size_t num_bins) noexcept {
         if (!enable) return;
 
-        if (cascade) {
-            for (size_t i = 0; i < num_bins; ++i) {
-                float g = GetGain(i, phase, space_);
-                re[i] *= g;
-                im[i] *= g;
-            }
-        }
-        else {
-            for (size_t i = 0; i < num_bins; ++i) {
-                float g = GetGain(i, phase, space_);
-                re[i] += g * re[i];
-                im[i] += g * im[i];
-            }
+        float dry = 1 - drywet;
+        float wet = drywet;
+        for (size_t i = 0; i < num_bins; ++i) {
+            float g = GetGain(i, phase, space_);
+            re[i] = dry * re[i] + wet * g * re[i];
+            im[i] = dry * im[i] + wet * g * im[i];
         }
     }
 
@@ -47,11 +40,11 @@ public:
         barber_phase_ = p;
     }
 
+    bool enable{};
     float pitch{};
     float morph{};
     float phase{};
-    bool enable{};
-    bool cascade{};
+    float drywet{};
     float barber_freq{};
 private:
     float Warp(float x) noexcept {
@@ -91,7 +84,7 @@ public:
     static constexpr size_t kFftSize = 1024;
     static constexpr size_t kNumBins = kFftSize / 2 + 1;
     static constexpr size_t kHopSize = 256;
-    static constexpr size_t kNumLayers = 8;
+    static constexpr size_t kNumLayers = 4;
 
     SpectralPhaser() {
         qwqdsp_window::Hann::Window(hann_window_, true);

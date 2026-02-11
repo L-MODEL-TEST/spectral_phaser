@@ -20,12 +20,12 @@ private:
     EmptyAudioProcessor& processor_;
     pluginshared::PresetPanel preset_;
     ui::CubeSelector phaser_layer_;
+    ui::Switch phasy_{"phasy"};
 
     ui::Switch enable_{"⭘"};
-    ui::Switch cascade_{"cascade", "paralle"};
+    ui::Dial drywet_{"drywet"};
     ui::Dial pitch_{"pitch"};
     ui::Dial phase_{"phase"};
     ui::Dial morph_{"morph"};
     ui::BpmSyncDial freq_{"freq"};
-    ui::Switch phasy_{"phasy"};
 };

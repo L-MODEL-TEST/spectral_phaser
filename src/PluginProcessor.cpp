@@ -39,11 +39,7 @@ EmptyAudioProcessor::EmptyAudioProcessor()
             //     juce::NormalisableRange<float>{-10.0f, 10.0f, 0.01f, 0.4f, true}, 0.0f);
             // param_listener_.Add(p, [this, idx = i](float v) { dsp_.GetLayer(idx).barber_freq = v; });
             // layout.add(std::move(p));
-            auto p = layer_lfo_[i].Build(
-                "freq" + i_str,
-                -10.0f, 10.0f, 0.01f, 0.4f, true,
-                "-1/64", "1/64"
-            );
+            auto p = layer_lfo_[i].Build("freq" + i_str, -10.0f, 10.0f, 0.01f, 0.4f, true, "-1/64", "1/64");
             layout.add(std::move(p.first), std::move(p.second));
         }
         {
@@ -53,9 +49,10 @@ EmptyAudioProcessor::EmptyAudioProcessor()
             layout.add(std::move(p));
         }
         {
-            auto p = std::make_unique<juce::AudioParameterBool>(juce::ParameterID{"cascade" + i_str, 1},
-                                                                "cascade" + i_str, true);
-            param_listener_.Add(p, [this, idx = i](bool v) { dsp_.GetLayer(idx).cascade = v; });
+            auto p =
+                std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{"drywet" + i_str, 1}, "drywet" + i_str,
+                                                            juce::NormalisableRange<float>{0.0f, 1.0f, 0.01f}, 1.0f);
+            param_listener_.Add(p, [this, idx = i](float v) { dsp_.GetLayer(idx).drywet = v; });
             layout.add(std::move(p));
         }
     }
