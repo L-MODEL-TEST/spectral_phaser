@@ -1,3 +1,6 @@
 [submodule "libs/JUCE"]
 	path = libs/JUCE
 	url = https://github.com/juce-framework/JUCE.git
+[submodule "src/pluginshared"]
+	path = src/pluginshared
+	url = https://github.com/ManasWolrd/pluginshared.git
