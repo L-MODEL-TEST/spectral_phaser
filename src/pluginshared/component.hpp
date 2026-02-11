@@ -341,6 +341,7 @@ public:
         slider.setLookAndFeel(&lookandfeel_);
         slider.addMouseListener(&slider_menu_, true);
         addAndMakeVisible(slider);
+        slider_menu_.menu_.setLookAndFeel(&lookandfeel_);
 
         label.setText(title, juce::dontSendNotification);
         label.setJustificationType(juce::Justification::centredLeft);
@@ -353,6 +354,7 @@ public:
     ~FlatSlider() override {
         slider.setLookAndFeel(nullptr);
         attach_ = nullptr;
+        slider_menu_.menu_.setLookAndFeel(nullptr);
     }
 
     void resized() override {
