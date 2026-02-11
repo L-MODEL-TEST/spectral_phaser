@@ -57,7 +57,8 @@ public:
     static int GetTempoValueIndex(juce::StringRef rate_name) {
         auto it = std::find(s_rate_name_table.begin(), s_rate_name_table.end(), rate_name);
         jassert(it != s_rate_name_table.end());
-        return static_cast<int>(it - s_rate_name_table.begin());
+        int where = static_cast<int>(it - s_rate_name_table.begin());
+        return where;
     }
 
     BpmSyncLFO() {
@@ -130,17 +131,32 @@ public:
                                                                0, std::numeric_limits<int32_t>::max(), 0);
         param_type = ptype.get();
 
-        auto attr =
-            juce::AudioParameterFloatAttributes{}.withStringFromValueFunction([this, float_numeric = GetFloatNumericText(free_freq_range_.interval)](auto x, auto) -> juce::String {
+        auto attr = juce::AudioParameterFloatAttributes{}.withStringFromValueFunction(
+            [this, float_numeric = GetFloatNumericText(free_freq_range_.interval)](auto x, auto) -> juce::String {
                 FreqAttrubute freq_attr = GetFreqAttribute();
                 if (freq_attr.tempo_sync) {
                     int index = static_cast<int>(std::lerp(static_cast<float>(tempo_begin_idx_),
-                                                           static_cast<float>(tempo_end_idx_), param_freq->get()));
+                                                           static_cast<float>(tempo_end_idx_), x));
                     index = std::clamp(index, tempo_begin_idx_, tempo_end_idx_);
                     return s_rate_name_table[static_cast<size_t>(index)];
                 }
                 else {
                     return juce::String{free_freq_range_.convertFrom0to1(x), float_numeric};
+                }
+            })
+            .withValueFromStringFunction([this](juce::String x) -> float {
+                FreqAttrubute freq_attr = GetFreqAttribute();
+                if (freq_attr.tempo_sync) {
+                    auto it = std::find(s_rate_name_table.begin(), s_rate_name_table.end(), x);
+                    if (it == s_rate_name_table.end()) return 0.0f;
+
+                    int where = static_cast<int>(it - s_rate_name_table.begin());
+                    where = std::clamp(where, tempo_begin_idx_, tempo_end_idx_);
+                    float val01 = static_cast<float>(where - tempo_begin_idx_) / static_cast<float>(tempo_end_idx_ - tempo_begin_idx_);
+                    return val01;
+                }
+                else {
+                    return free_freq_range_.convertTo0to1(x.getFloatValue());
                 }
             });
         auto pfreq = std::make_unique<juce::AudioParameterFloat>(juce::ParameterID{name_ + "_freq", 1}, name_ + "_freq",
